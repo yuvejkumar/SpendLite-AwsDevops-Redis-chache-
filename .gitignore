@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+
+# Node / React
+node_modules/
+frontend/node_modules/
+.pnp
+.pnp.js
+frontend/dist/
+frontend/dist-ssr/
+*.local
+
+# Environment variables
+.env
+backend/.env
+frontend/.env
+
+# Application Storage & Temp files
+backend/data/*.json
+!backend/data/.gitkeep
+*.tmp
+
+# Logs
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
