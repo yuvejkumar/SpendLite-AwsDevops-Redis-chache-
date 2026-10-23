@@ -1,9 +1,34 @@
 from datetime import date, datetime, timezone
-import uuid
 from typing import Optional
+import uuid
+
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import Column, Float, String
+
+from database import Base
 
 
+# ==========================================
+# SQLAlchemy ORM Model
+# ==========================================
+class ExpenseDB(Base):
+    __tablename__ = "expenses"
+
+    id = Column(String(36), primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    title = Column(String(100), nullable=False)
+    amount = Column(Float, nullable=False)
+    category = Column(String(50), nullable=False)
+    date = Column(String(10), nullable=False)
+    created_at = Column(
+        String(50),
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).isoformat(),
+    )
+
+
+# ==========================================
+# Pydantic Schemas for Request & Response
+# ==========================================
 class ExpenseBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=100, description="Title of the expense")
     amount: float = Field(..., gt=0, description="Expense amount in INR (must be positive)")
@@ -39,8 +64,10 @@ class ExpenseCreate(ExpenseBase):
 
 
 class Expense(ExpenseBase):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    id: str
+    created_at: str
+
+    model_config = {"from_attributes": True}
 
 
 class TotalResponse(BaseModel):

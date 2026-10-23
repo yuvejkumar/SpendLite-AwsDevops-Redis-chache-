@@ -1,6 +1,30 @@
 version: '3.8'
 
 services:
+  # ==========================================
+  # PostgreSQL Database Service
+  # ==========================================
+  db:
+    image: postgres:16-alpine
+    container_name: spendlite-db
+    environment:
+      POSTGRES_USER: spendlite_user
+      POSTGRES_PASSWORD: spendlite_password
+      POSTGRES_DB: spendlite_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spendlite_user -d spendlite_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ==========================================
+  # Redis Cache Service
+  # ==========================================
   redis:
     image: redis:7-alpine
     container_name: spendlite-redis
@@ -14,6 +38,9 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ==========================================
+  # FastAPI Backend Service
+  # ==========================================
   backend:
     build:
       context: ./backend
@@ -22,6 +49,12 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - POSTGRES_USER=spendlite_user
+      - POSTGRES_PASSWORD=spendlite_password
+      - POSTGRES_DB=spendlite_db
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgresql+psycopg2://spendlite_user:spendlite_password@db:5432/spendlite_db
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_TTL=60
@@ -30,6 +63,8 @@ services:
     volumes:
       - backend-data:/app/data
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
@@ -40,6 +75,9 @@ services:
       start_period: 5s
     restart: unless-stopped
 
+  # ==========================================
+  # React + Vite Frontend Service
+  # ==========================================
   frontend:
     build:
       context: ./frontend
@@ -55,5 +93,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  db-data:
+    name: spendlite-db-data
   backend-data:
     name: spendlite-backend-data
